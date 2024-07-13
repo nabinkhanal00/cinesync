@@ -12,15 +12,16 @@ import (
 )
 
 const (
-	ScopeActivation = "ACTIVATION"
+	ScopeActivation     = "ACTIVATION"
+	ScopeAuthentication = "AUTHENTICATION"
 )
 
 type Token struct {
-	PlainText string
-	Hash      []byte
-	UserID    int64
-	Expiry    time.Time
-	Scope     string
+	PlainText string    `json:"token"`
+	Hash      []byte    `json:"-"`
+	UserID    int64     `json:"-"`
+	Expiry    time.Time `json:"expiry"`
+	Scope     string    `json:"-"`
 }
 
 func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error) {
@@ -56,8 +57,24 @@ func (m TokenModel) New(userID int64, ttl time.Duration, scope string) (*Token, 
 	if err != nil {
 		return nil, err
 	}
+	err = m.RemoveForUser(userID)
+	if err != nil {
+		return nil, err
+	}
 	err = m.Insert(token)
 	return token, err
+}
+
+func (m TokenModel) RemoveForUser(userID int64) error {
+	query := `
+		DELETE FROM tokens
+		WHERE user_id=$1
+	`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, query, userID)
+	return err
 }
 
 func (m TokenModel) Insert(token *Token) error {

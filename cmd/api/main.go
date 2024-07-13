@@ -68,7 +68,7 @@ func main() {
 
 	port, err := strconv.ParseInt(os.Getenv("SMTP_PORT"), 10, 64)
 	if err != nil {
-		logger.PrintFatal(errors.New("Invalid port value in environment"), nil)
+		logger.PrintFatal(errors.New("invalid port value in environment"), nil)
 	}
 	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("SMTP_HOST"), "SMTP host")
 	flag.IntVar(&cfg.smtp.port, "smtp-port", int(port), "SMTP port")

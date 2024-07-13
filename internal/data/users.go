@@ -91,6 +91,7 @@ func (m UserModel) Insert(user *User) error {
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, created_at, version;
 	`
+
 	args := []any{user.Name, user.Email, user.Password.hash, user.Activated}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -112,7 +113,7 @@ func (m UserModel) Insert(user *User) error {
 
 func (m UserModel) GetByEmail(email string) (*User, error) {
 	query := `
-		SELECT id, created_it, name, email, password_hash, activated, version
+		SELECT id, created_at, name, email, password_hash,activated, version
 		FROM users
 		WHERE email=$1;
 	`
@@ -125,6 +126,7 @@ func (m UserModel) GetByEmail(email string) (*User, error) {
 		&user.ID,
 		&user.CreatedAt,
 		&user.Name,
+		&user.Email,
 		&user.Password.hash,
 		&user.Activated,
 		&user.Version,
@@ -180,7 +182,7 @@ func (m UserModel) GetForToken(tokenScope, tokenPlainText string) (*User, error)
 
 	query :=
 		`
-		SELECT users.id, users.created_at, users.name, users.email, users.activated, users.version
+		SELECT users.id, users.created_at, users.name, users.email, users.password_hash, users.activated, users.version
 		FROM users
 		INNER JOIN tokens
 		ON users.id = tokens.user_id
@@ -200,6 +202,7 @@ func (m UserModel) GetForToken(tokenScope, tokenPlainText string) (*User, error)
 		&user.CreatedAt,
 		&user.Name,
 		&user.Email,
+		&user.Password.hash,
 		&user.Activated,
 		&user.Version,
 	)
